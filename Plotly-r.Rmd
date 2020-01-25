@@ -1,0 +1,132 @@
+---
+title: "Interactive Data Visualization with plotly in R"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  pdf_document: default
+  html_document:
+    code_folding: hide
+    fig_align: center
+    fig_height: 6
+    fig_width: 12
+    keep_md: yes
+editor_options:
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, plotly, ggforce, concaveman)
+
+theme_set(theme_bw())
+```
+
+https://plotly-r.com/
+
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## 1
+### Preface
+#### 1.1 Why interactive web graphics from R?
+
+```{r why11}
+library(ggplot2)
+ggplot(mpg, aes(displ, hwy)) + geom_point()
+
+#vs
+
+library(plotly)
+m <- highlight_key(mpg)
+p <- ggplot(m, aes(displ, hwy)) + geom_point()
+gg <- highlight(ggplotly(p), "plotly_selected")
+crosstalk::bscols(gg, DT::datatable(m))
+
+#vs
+
+library(ggforce, concaveman)
+ggplot(mpg, aes(displ, hwy)) + 
+  geom_point() +
+  geom_mark_hull(aes(filter = model == "corvette", label = model)) +
+  labs(
+    title = "Fuel economy from 1999 to 2008 for 38 car models",
+    caption = "Source: https://fueleconomy.gov/",
+    x = "Engine Displacement", 
+    y = "Miles Per Gallon"
+  )
+```
+
+#### 1.2 What you will learn
+
+```{r what12}
+plot_ly(diamonds, x = ~cut, color = ~clarity, colors = "Accent")
+```
+
+## 2
+### Overview
+#### 2.1 Intro to plot_ly()
+
+```{r}
+# load the plotly R package
+library(plotly)
+
+# load the diamonds dataset from the ggplot2 package
+data(diamonds, package = "ggplot2")
+diamonds
+
+plot_ly(diamonds, x = ~cut)
+plot_ly(diamonds, x = ~cut, y = ~clarity)
+plot_ly(diamonds, x = ~cut, color = ~clarity, colors = "Accent")
+
+# doesn't produce black bars
+plot_ly(diamonds, x = ~cut, color = "black")
+# produces red bars with black outline
+plot_ly(diamonds, x = ~cut, color = I("red"), 
+        stroke = I("black"), span = I(2))
+
+diamonds %>%
+  plot_ly(x = ~cut) %>%
+  layout(title = "My beatiful histogram")
+
+diamonds %>%
+  plot_ly() %>% 
+  add_histogram(x = ~cut)
+
+diamonds %>%
+  count(cut) %>%
+  plot_ly() %>% 
+  add_bars(x = ~cut, y = ~n)
+
+diamonds %>%
+  plot_ly(x = ~cut) %>% 
+  add_histogram() %>%
+  group_by(cut) %>%
+  summarise(n = n()) %>%
+  add_text(
+    text = ~scales::comma(n), y = ~n, 
+    textposition = "top middle", 
+    cliponaxis = FALSE
+  )
+
+diamonds %>%
+  plot_ly(x = ~cut) %>% 
+  add_histogram() %>%
+  group_by(cut) %>%
+  summarise(n = n()) %>% 
+  plotly_data()
+```
+
+
+
+
